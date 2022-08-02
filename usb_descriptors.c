@@ -27,182 +27,127 @@
 
 #include "tusb.h"
 
-/* A combination of interfaces must have a unique product id, since PC will save device driver after the first plug.
- * Same VID/PID with different interface e.g MSC (first), then CDC (later) will possibly cause system error on PC.
- *
- * Auto ProductID layout's Bitmap:
- *   [MSB]         HID | MSC | CDC          [LSB]
+const uint16_t usb_version    = 0x0200; /* USB 2.0 */
+const uint16_t vendor_id      = 0xabcd; /* 厂商ID */
+const uint16_t product_id     = 0x0001; /* 产品ID */
+const uint16_t device_release = 0x0001; /* 版本号 */
+
+/*
+ +---------------------------------+
+ |      USB 字符串描述符            |
+ + --------------------------------+
+*/
+
+/* 字符串值，UTF-16LE 编码 */
+static uint16_t language_string_desc[]    = {0x0304, 0x0409};                                      /* EN = 0x0409 */
+static uint16_t manufacture_string_desc[] = {0x0310, 'L', 'u', 'o', ' ', 'K', 'u', 'n'};           /* "Luokun" */
+static uint16_t product_string_desc[]     = {0x0314, 'P', 'i', 'c', 'o', 'B', 'o', 'a', 'r', 'd'}; /* "Picoboard" */
+static uint16_t serial_string_desc[]      = {0x0310, 'r', 'p', '2', '0', '0', '2', '0'};           /* "rp2020" */
+
+/* USB 字符串描述符 */
+const uint16_t* usb_string_descs[] = {
+    [0] = language_string_desc,
+    [1] = manufacture_string_desc,
+    [2] = product_string_desc,
+    [3] = serial_string_desc,
+};
+
+const uint8_t language_string_id    = 0; /* 字符串索引 0，语言 */
+const uint8_t manufacture_string_id = 1; /* 字符串索引 1，厂商 */
+const uint8_t product_string_id     = 2; /* 字符串索引 2，产品 */
+const uint8_t serial_string_id      = 3; /* 字符串索引 3，序列号 */
+
+/*
+ +---------------------------------------------+
+ |              USB 设备描述符                  |
+ +---------------------------------------------+
+*/
+
+tusb_desc_device_t const device_desc = {
+    .bLength         = sizeof(tusb_desc_device_t), /* 设备描述符长度，固定为18 */
+    .bDescriptorType = TUSB_DESC_DEVICE,           /* 描述符类型，固定为设备描述符 1 */
+    .bcdUSB          = usb_version,                /* USB版本，固定为 2.0 */
+
+    .bDeviceClass    = 0x00,                   /* 设备类别，HID不在设备描述符中定义，固定为 0 */
+    .bDeviceSubClass = 0x00,                   /* 设备子类别，HID不在设备描述符中定义，固定为 0 */
+    .bDeviceProtocol = 0x00,                   /* 设备协议，HID不在设备描述符中定义，固定为 0 */
+    .bMaxPacketSize0 = CFG_TUD_ENDPOINT0_SIZE, /* 端点0最大包大小，固定为 64 */
+
+    .idVendor  = vendor_id,      /* 厂商ID */
+    .idProduct = product_id,     /* 产品ID */
+    .bcdDevice = device_release, /* 版本号 */
+
+    .iManufacturer = manufacture_string_id, /* 厂商的字符描述符索引 */
+    .iProduct      = product_string_id,     /* 产品的字符描述符索引 */
+    .iSerialNumber = serial_string_id,      /* 序列号的字符描述符索引 */
+
+    .bNumConfigurations = 0x01, /* 配置描述符数量，固定为 1 */
+};
+
+/*
+ +-------------------------------------+
+ |          HID 报文描述符              |
+ +-------------------------------------+
+*/
+
+const uint8_t hid_report_desc[] = {
+    TUD_HID_REPORT_DESC_KEYBOARD(HID_REPORT_ID(REPORT_ID_KEYBOARD)),         /* HID报文描述符：键盘报文 */
+    TUD_HID_REPORT_DESC_MOUSE(HID_REPORT_ID(REPORT_ID_MOUSE)),               /* HID报文描述符：鼠标报文 */
+    TUD_HID_REPORT_DESC_CONSUMER(HID_REPORT_ID(REPORT_ID_CONSUMER_CONTROL)), /* HID报文描述符：媒体报文 */
+    TUD_HID_REPORT_DESC_GAMEPAD(HID_REPORT_ID(REPORT_ID_GAMEPAD)),           /* HID报文描述符：游戏报文 */
+};
+
+/*
+ +------------------------------------------------+
+ |              USB 配置描述符                     |
+ +------------------------------------------------+
+*/
+
+const uint8_t config_desc[] = {
+    TUD_CONFIG_DESCRIPTOR(
+        /* config number    = */ 1,                                      /* 配置编号 1 */
+        /* interface count  = */ 1,                                      /* 接口数量 1 */
+        /* string index     = */ 0,                                      /* 字符串索引 0，无字符串 */
+        /* total length     = */ TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN, /* 总长度，配置描述符长度 + HID描述符长度 */
+        /* attribute        = */ TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, /* 配置属性，支持远程唤醒 */
+        /* power in mA      = */ 100),                               /* 电源电流 100mA */
+
+    TUD_HID_DESCRIPTOR(
+        /* Interface number         = */ 0,                       /* 接口编号 0 */
+        /* string index             = */ 0,                       /* 字符串索引 0，无字符串 */
+        /* protocol                 = */ HID_ITF_PROTOCOL_NONE,   /* 无协议 */
+        /* report descriptor len    = */ sizeof(hid_report_desc), /* HID报文描述符长度 */
+
+        /* EP In address    = */ 0x81, /* 端点描述符：地址及输入属性，bit 7为输入 1, bit 0-3与其他位为 0 */
+        /* size             = */ CFG_TUD_HID_EP_BUFSIZE, /* 端点描述符：缓冲区大小为 16 bytes*/
+        /* polling interval = */ 5),                     /* 端点描述符：主机轮询间隔为 5ms */
+};
+
+/*
+ * USB 字符串描述符 回调函数
  */
-#define _PID_MAP(itf, n) ((CFG_TUD_##itf) << (n))
-#define USB_PID \
-    (0x4000 | _PID_MAP(CDC, 0) | _PID_MAP(MSC, 1) | _PID_MAP(HID, 2) | _PID_MAP(MIDI, 3) | _PID_MAP(VENDOR, 4))
-
-#define USB_VID 0xCafe
-#define USB_BCD 0x0200
-
-//--------------------------------------------------------------------+
-// Device Descriptors
-//--------------------------------------------------------------------+
-tusb_desc_device_t const desc_device = {
-    .bLength         = sizeof(tusb_desc_device_t),
-    .bDescriptorType = TUSB_DESC_DEVICE,
-    .bcdUSB          = USB_BCD,
-    .bDeviceClass    = 0x00,
-    .bDeviceSubClass = 0x00,
-    .bDeviceProtocol = 0x00,
-    .bMaxPacketSize0 = CFG_TUD_ENDPOINT0_SIZE,
-
-    .idVendor  = USB_VID,
-    .idProduct = USB_PID,
-    .bcdDevice = 0x0100,
-
-    .iManufacturer = 0x01,
-    .iProduct      = 0x02,
-    .iSerialNumber = 0x03,
-
-    .bNumConfigurations = 0x01,
-};
-
-// Invoked when received GET DEVICE DESCRIPTOR
-// Application return pointer to descriptor
-uint8_t const* tud_descriptor_device_cb(void) {
-    return (uint8_t const*) &desc_device;
+const uint8_t* tud_descriptor_device_cb(void) {
+    return (const uint8_t*) &device_desc;
 }
 
-//--------------------------------------------------------------------+
-// HID Report Descriptor
-//--------------------------------------------------------------------+
-
-uint8_t const desc_hid_report[] = {
-    TUD_HID_REPORT_DESC_KEYBOARD(HID_REPORT_ID(REPORT_ID_KEYBOARD)),
-    TUD_HID_REPORT_DESC_MOUSE(HID_REPORT_ID(REPORT_ID_MOUSE)),
-    TUD_HID_REPORT_DESC_CONSUMER(HID_REPORT_ID(REPORT_ID_CONSUMER_CONTROL)),
-    TUD_HID_REPORT_DESC_GAMEPAD(HID_REPORT_ID(REPORT_ID_GAMEPAD)),
-};
-
-// Invoked when received GET HID REPORT DESCRIPTOR
-// Application return pointer to descriptor
-// Descriptor contents must exist long enough for transfer to complete
-uint8_t const* tud_hid_descriptor_report_cb(uint8_t instance) {
-    return desc_hid_report;
-}
-
-//--------------------------------------------------------------------+
-// Configuration Descriptor
-//--------------------------------------------------------------------+
-
-enum { ITF_NUM_HID, ITF_NUM_TOTAL };
-
-#define CONFIG_TOTAL_LEN (TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN)
-
-#define EPNUM_HID 0x81
-
-uint8_t const desc_configuration[] = {
-    // Config number, interface count, string index, total length, attribute, power in mA
-    TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, 100),
-
-    // Interface number, string index, protocol, report descriptor len, EP In address, size & polling interval
-    TUD_HID_DESCRIPTOR(ITF_NUM_HID, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report), EPNUM_HID,
-                       CFG_TUD_HID_EP_BUFSIZE, 5),
-};
-
-#if TUD_OPT_HIGH_SPEED
-// Per USB specs: high speed capable device must report device_qualifier and other_speed_configuration
-
-// other speed configuration
-uint8_t desc_other_speed_config[CONFIG_TOTAL_LEN];
-
-// device qualifier is mostly similar to device descriptor since we don't change configuration based on speed
-tusb_desc_device_qualifier_t const desc_device_qualifier = {.bLength         = sizeof(tusb_desc_device_qualifier_t),
-                                                            .bDescriptorType = TUSB_DESC_DEVICE_QUALIFIER,
-                                                            .bcdUSB          = USB_BCD,
-
-                                                            .bDeviceClass    = 0x00,
-                                                            .bDeviceSubClass = 0x00,
-                                                            .bDeviceProtocol = 0x00,
-
-                                                            .bMaxPacketSize0    = CFG_TUD_ENDPOINT0_SIZE,
-                                                            .bNumConfigurations = 0x01,
-                                                            .bReserved          = 0x00};
-
-// Invoked when received GET DEVICE QUALIFIER DESCRIPTOR request
-// Application return pointer to descriptor, whose contents must exist long enough for transfer to complete.
-// device_qualifier descriptor describes information about a high-speed capable device that would
-// change if the device were operating at the other speed. If not highspeed capable stall this request.
-uint8_t const* tud_descriptor_device_qualifier_cb(void) {
-    return (uint8_t const*) &desc_device_qualifier;
-}
-
-// Invoked when received GET OTHER SEED CONFIGURATION DESCRIPTOR request
-// Application return pointer to descriptor, whose contents must exist long enough for transfer to complete
-// Configuration descriptor in the other speed e.g if high speed then this is for full speed and vice versa
-uint8_t const* tud_descriptor_other_speed_configuration_cb(uint8_t index) {
-    (void) index;  // for multiple configurations
-
-    // other speed config is basically configuration with type = OHER_SPEED_CONFIG
-    memcpy(desc_other_speed_config, desc_configuration, CONFIG_TOTAL_LEN);
-    desc_other_speed_config[1] = TUSB_DESC_OTHER_SPEED_CONFIG;
-
-    // this example use the same configuration for both high and full speed mode
-    return desc_other_speed_config;
-}
-
-#endif  // highspeed
-
-// Invoked when received GET CONFIGURATION DESCRIPTOR
-// Application return pointer to descriptor
-// Descriptor contents must exist long enough for transfer to complete
+/*
+ * USB 配置描述符 回调函数
+ */
 uint8_t const* tud_descriptor_configuration_cb(uint8_t index) {
-    (void) index;  // for multiple configurations
-
     // This example use the same configuration for both high and full speed mode
-    return desc_configuration;
+    return config_desc;
 }
 
-//--------------------------------------------------------------------+
-// String Descriptors
-//--------------------------------------------------------------------+
+/*
+ * USB 字符串描述符 回调函数
+ */
+const uint16_t* tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
+    return index < sizeof(usb_string_descs) / sizeof(usb_string_descs[0]) ? usb_string_descs[index] : NULL;
+}
 
-// array of pointer to string descriptors
-char const* string_desc_arr[] = {
-    (const char[]){0x09, 0x04},  // 0: is supported language is English (0x0409)
-    "TinyUSB",                   // 1: Manufacturer
-    "TinyUSB Device",            // 2: Product
-    "123456",                    // 3: Serials, should use chip ID
-};
-
-static uint16_t _desc_str[32];
-
-// Invoked when received GET STRING DESCRIPTOR request
-// Application return pointer to descriptor, whose contents must exist long enough for transfer to complete
-uint16_t const* tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
-    (void) langid;
-
-    uint8_t chr_count;
-
-    if (index == 0) {
-        memcpy(&_desc_str[1], string_desc_arr[0], 2);
-        chr_count = 1;
-    } else {
-        // Note: the 0xEE index string is a Microsoft OS 1.0 Descriptors.
-        // https://docs.microsoft.com/en-us/windows-hardware/drivers/usbcon/microsoft-defined-usb-descriptors
-
-        if (!(index < sizeof(string_desc_arr) / sizeof(string_desc_arr[0]))) return NULL;
-
-        const char* str = string_desc_arr[index];
-
-        // Cap at max char
-        chr_count = strlen(str);
-        if (chr_count > 31) chr_count = 31;
-
-        // Convert ASCII string into UTF-16
-        for (uint8_t i = 0; i < chr_count; i++) {
-            _desc_str[1 + i] = str[i];
-        }
-    }
-
-    // first byte is length (including header), second byte is string type
-    _desc_str[0] = (TUSB_DESC_STRING << 8) | (2 * chr_count + 2);
-
-    return _desc_str;
+/*
+ * HID 报文描述符 回调函数
+ */
+uint8_t const* tud_hid_descriptor_report_cb(uint8_t instance) {
+    return hid_report_desc;
 }
