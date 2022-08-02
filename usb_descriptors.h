@@ -24,10 +24,11 @@
 
 #pragma once
 
-enum {
-    REPORT_ID_KEYBOARD = 1,
-    REPORT_ID_MOUSE,
-    REPORT_ID_CONSUMER_CONTROL,
-    REPORT_ID_GAMEPAD,
-    REPORT_ID_COUNT,
-};
+#include <stdint.h>
+
+extern const uint8_t*   usb_device_desc;      // USB device descriptor
+extern const uint8_t*   usb_config_desc;      // USB configuration descriptor
+extern const uint8_t*   usb_interface_desc;   // USB interface descriptor
+extern const uint8_t*   hid_report_desc;      // HID report descriptor
+extern const uint16_t** usb_string_desc;      // USB string descriptor
+extern const uint8_t    usb_string_desc_len;  // USB string descriptor length

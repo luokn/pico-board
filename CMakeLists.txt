@@ -15,6 +15,9 @@ target_include_directories(my_pico PUBLIC
 target_sources(my_pico PUBLIC 
     ${CMAKE_CURRENT_LIST_DIR}/main.c 
     ${CMAKE_CURRENT_LIST_DIR}/usb_descriptors.c
+    ${CMAKE_CURRENT_LIST_DIR}/usb_callbacks.c
+    ${CMAKE_CURRENT_LIST_DIR}/hid_report.c
+    ${CMAKE_CURRENT_LIST_DIR}/hid_callbacks.c
 )
 
 target_link_libraries(my_pico PUBLIC 

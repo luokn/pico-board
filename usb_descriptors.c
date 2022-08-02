@@ -25,6 +25,7 @@
 
 #include "usb_descriptors.h"
 
+#include "hid_report.h"
 #include "tusb.h"
 
 const uint16_t usb_version    = 0x0200; /* USB 2.0 */
@@ -44,18 +45,18 @@ static uint16_t manufacture_string_desc[] = {0x0310, 'L', 'u', 'o', ' ', 'K', 'u
 static uint16_t product_string_desc[]     = {0x0314, 'P', 'i', 'c', 'o', 'B', 'o', 'a', 'r', 'd'}; /* "Picoboard" */
 static uint16_t serial_string_desc[]      = {0x0310, 'r', 'p', '2', '0', '0', '2', '0'};           /* "rp2020" */
 
+const uint8_t language_string_id    = 0; /* 字符串索引 0，语言 */
+const uint8_t manufacture_string_id = 1; /* 字符串索引 1，厂商 */
+const uint8_t product_string_id     = 2; /* 字符串索引 2，产品 */
+const uint8_t serial_string_id      = 3; /* 字符串索引 3，序列号 */
+
 /* USB 字符串描述符 */
-static const uint16_t* usb_string_descs[] = {
+static const uint16_t* _string_desc[] = {
     [0] = language_string_desc,
     [1] = manufacture_string_desc,
     [2] = product_string_desc,
     [3] = serial_string_desc,
 };
-
-const uint8_t language_string_id    = 0; /* 字符串索引 0，语言 */
-const uint8_t manufacture_string_id = 1; /* 字符串索引 1，厂商 */
-const uint8_t product_string_id     = 2; /* 字符串索引 2，产品 */
-const uint8_t serial_string_id      = 3; /* 字符串索引 3，序列号 */
 
 /*
  +---------------------------------------------+
@@ -63,7 +64,7 @@ const uint8_t serial_string_id      = 3; /* 字符串索引 3，序列号 */
  +---------------------------------------------+
 */
 
-tusb_desc_device_t const device_desc = {
+static const tusb_desc_device_t _device_desc = {
     .bLength         = sizeof(tusb_desc_device_t), /* 设备描述符长度，固定为18 */
     .bDescriptorType = TUSB_DESC_DEVICE,           /* 描述符类型，固定为设备描述符 1 */
     .bcdUSB          = usb_version,                /* USB版本，固定为 2.0 */
@@ -90,7 +91,7 @@ tusb_desc_device_t const device_desc = {
  +-------------------------------------+
 */
 
-const uint8_t hid_report_desc[] = {
+const uint8_t _hid_report_desc[] = {
     TUD_HID_REPORT_DESC_KEYBOARD(HID_REPORT_ID(REPORT_ID_KEYBOARD)),         /* HID报文描述符：键盘报文 */
     TUD_HID_REPORT_DESC_MOUSE(HID_REPORT_ID(REPORT_ID_MOUSE)),               /* HID报文描述符：鼠标报文 */
     TUD_HID_REPORT_DESC_CONSUMER(HID_REPORT_ID(REPORT_ID_CONSUMER_CONTROL)), /* HID报文描述符：媒体报文 */
@@ -103,7 +104,7 @@ const uint8_t hid_report_desc[] = {
  +------------------------------------------------+
 */
 
-const uint8_t config_desc[] = {
+static const uint8_t _config_desc[] = {
     TUD_CONFIG_DESCRIPTOR(
         /* config number    = */ 1,                                      /* 配置编号 1 */
         /* interface count  = */ 1,                                      /* 接口数量 1 */
@@ -113,41 +114,18 @@ const uint8_t config_desc[] = {
         /* power in mA      = */ 100),                               /* 电源电流 100mA */
 
     TUD_HID_DESCRIPTOR(
-        /* Interface number         = */ 0,                       /* 接口编号 0 */
-        /* string index             = */ 0,                       /* 字符串索引 0，无字符串 */
-        /* protocol                 = */ HID_ITF_PROTOCOL_NONE,   /* 无协议 */
-        /* report descriptor len    = */ sizeof(hid_report_desc), /* HID报文描述符长度 */
+        /* Interface number         = */ 0,                        /* 接口编号 0 */
+        /* string index             = */ 0,                        /* 字符串索引 0，无字符串 */
+        /* protocol                 = */ HID_ITF_PROTOCOL_NONE,    /* 无协议 */
+        /* report descriptor len    = */ sizeof(_hid_report_desc), /* HID报文描述符长度 */
 
         /* EP In address    = */ 0x81, /* 端点描述符：地址及输入属性，bit 7为输入 1, bit 0-3与其他位为 0 */
         /* size             = */ CFG_TUD_HID_EP_BUFSIZE, /* 端点描述符：缓冲区大小为 16 bytes*/
         /* polling interval = */ 5),                     /* 端点描述符：主机轮询间隔为 5ms */
 };
 
-/*
- * USB 字符串描述符 回调函数
- */
-const uint8_t* tud_descriptor_device_cb(void) {
-    return (const uint8_t*) &device_desc;
-}
-
-/*
- * USB 配置描述符 回调函数
- */
-uint8_t const* tud_descriptor_configuration_cb(uint8_t index) {
-    // This example use the same configuration for both high and full speed mode
-    return config_desc;
-}
-
-/*
- * USB 字符串描述符 回调函数
- */
-const uint16_t* tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
-    return index < sizeof(usb_string_descs) / sizeof(usb_string_descs[0]) ? usb_string_descs[index] : NULL;
-}
-
-/*
- * HID 报文描述符 回调函数
- */
-uint8_t const* tud_hid_descriptor_report_cb(uint8_t instance) {
-    return hid_report_desc;
-}
+const uint8_t*   usb_device_desc     = (const uint8_t*) &_device_desc;
+const uint8_t*   usb_config_desc     = _config_desc;
+const uint8_t*   hid_report_desc     = _hid_report_desc;
+const uint16_t** usb_string_desc     = _string_desc;
+const uint8_t    usb_string_desc_len = sizeof(_string_desc) / sizeof(_string_desc[0]);
