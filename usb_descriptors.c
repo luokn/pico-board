@@ -40,12 +40,12 @@ const uint16_t device_release = 0x0001; /* 版本号 */
 
 /* 字符串值，UTF-16LE 编码 */
 static uint16_t language_string_desc[]    = {0x0304, 0x0409};                                      /* EN = 0x0409 */
-static uint16_t manufacture_string_desc[] = {0x0310, 'L', 'u', 'o', ' ', 'K', 'u', 'n'};           /* "Luokun" */
+static uint16_t manufacture_string_desc[] = {0x0310, 'L', 'u', 'o', ' ', 'K', 'u', 'n'};           /* "Luo Kun" */
 static uint16_t product_string_desc[]     = {0x0314, 'P', 'i', 'c', 'o', 'B', 'o', 'a', 'r', 'd'}; /* "Picoboard" */
 static uint16_t serial_string_desc[]      = {0x0310, 'r', 'p', '2', '0', '0', '2', '0'};           /* "rp2020" */
 
 /* USB 字符串描述符 */
-const uint16_t* usb_string_descs[] = {
+static const uint16_t* usb_string_descs[] = {
     [0] = language_string_desc,
     [1] = manufacture_string_desc,
     [2] = product_string_desc,
