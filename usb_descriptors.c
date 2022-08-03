@@ -82,7 +82,7 @@ static const tusb_desc_device_t _device_desc = {
     .iProduct      = product_string_id,     /* 产品的字符描述符索引 */
     .iSerialNumber = serial_string_id,      /* 序列号的字符描述符索引 */
 
-    .bNumConfigurations = 0x01, /* 配置描述符数量，固定为 1 */
+    .bNumConfigurations = 1, /* 配置描述符数量，固定为 1 */
 };
 
 /*
