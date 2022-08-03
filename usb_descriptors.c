@@ -51,7 +51,7 @@ const uint8_t product_string_id     = 2; /* 字符串索引 2，产品 */
 const uint8_t serial_string_id      = 3; /* 字符串索引 3，序列号 */
 
 /* USB 字符串描述符 */
-static const uint16_t* _string_desc[] = {
+static const uint16_t* _usb_string_desc[] = {
     [0] = language_string_desc,
     [1] = manufacture_string_desc,
     [2] = product_string_desc,
@@ -64,7 +64,7 @@ static const uint16_t* _string_desc[] = {
  +---------------------------------------------+
 */
 
-static const tusb_desc_device_t _device_desc = {
+static const tusb_desc_device_t _usb_device_desc = {
     .bLength         = sizeof(tusb_desc_device_t), /* 设备描述符长度，固定为18 */
     .bDescriptorType = TUSB_DESC_DEVICE,           /* 描述符类型，固定为设备描述符 1 */
     .bcdUSB          = usb_version,                /* USB版本，固定为 2.0 */
@@ -104,7 +104,7 @@ const uint8_t _hid_report_desc[] = {
  +------------------------------------------------+
 */
 
-static const uint8_t _config_desc[] = {
+static const uint8_t _usb_config_desc[] = {
     TUD_CONFIG_DESCRIPTOR(
         /* config number    = */ 1,                                      /* 配置编号 1 */
         /* interface count  = */ 1,                                      /* 接口数量 1 */
@@ -124,8 +124,8 @@ static const uint8_t _config_desc[] = {
         /* polling interval = */ 5),                     /* 端点描述符：主机轮询间隔为 5ms */
 };
 
-const uint8_t*   usb_device_desc     = (const uint8_t*) &_device_desc;
-const uint8_t*   usb_config_desc     = _config_desc;
+const uint8_t*   usb_device_desc     = (const uint8_t*) &_usb_device_desc;
+const uint8_t*   usb_config_desc     = _usb_config_desc;
 const uint8_t*   hid_report_desc     = _hid_report_desc;
-const uint16_t** usb_string_desc     = _string_desc;
-const uint8_t    usb_string_desc_len = sizeof(_string_desc) / sizeof(_string_desc[0]);
+const uint16_t** usb_string_desc     = _usb_string_desc;
+const uint8_t    usb_string_desc_len = sizeof(_usb_string_desc) / sizeof(_usb_string_desc[0]);
