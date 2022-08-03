@@ -28,10 +28,10 @@
 #include "hid_report.h"
 #include "tusb.h"
 
-const uint16_t usb_version    = 0x0200; /* USB 2.0 */
-const uint16_t vendor_id      = 0xabcd; /* 厂商ID */
-const uint16_t product_id     = 0x0001; /* 产品ID */
-const uint16_t device_release = 0x0001; /* 版本号 */
+static const uint16_t _usb_version    = 0x0200; /* USB 2.0 */
+static const uint16_t _vendor_id      = 0xabcd; /* 厂商ID */
+static const uint16_t _product_id     = 0x0001; /* 产品ID */
+static const uint16_t _device_release = 0x0001; /* 版本号 */
 
 /*
  +---------------------------------+
@@ -40,22 +40,22 @@ const uint16_t device_release = 0x0001; /* 版本号 */
 */
 
 /* 字符串值，UTF-16LE 编码 */
-static uint16_t language_string_desc[]    = {0x0304, 0x0409};                                      /* EN = 0x0409 */
-static uint16_t manufacture_string_desc[] = {0x0310, 'L', 'u', 'o', ' ', 'K', 'u', 'n'};           /* "Luo Kun" */
-static uint16_t product_string_desc[]     = {0x0314, 'P', 'i', 'c', 'o', 'B', 'o', 'a', 'r', 'd'}; /* "Picoboard" */
-static uint16_t serial_string_desc[]      = {0x0310, 'r', 'p', '2', '0', '0', '2', '0'};           /* "rp2020" */
+static uint16_t _language_string_desc[]    = {0x0304, 0x0409};                                      /* EN = 0x0409 */
+static uint16_t _manufacture_string_desc[] = {0x0310, 'L', 'u', 'o', ' ', 'K', 'u', 'n'};           /* "Luo Kun" */
+static uint16_t _product_string_desc[]     = {0x0314, 'P', 'i', 'c', 'o', 'B', 'o', 'a', 'r', 'd'}; /* "Picoboard" */
+static uint16_t _serial_string_desc[]      = {0x0310, 'r', 'p', '2', '0', '0', '2', '0'};           /* "rp2020" */
 
-const uint8_t language_string_id    = 0; /* 字符串索引 0，语言 */
-const uint8_t manufacture_string_id = 1; /* 字符串索引 1，厂商 */
-const uint8_t product_string_id     = 2; /* 字符串索引 2，产品 */
-const uint8_t serial_string_id      = 3; /* 字符串索引 3，序列号 */
+const uint8_t _language_string_id    = 0; /* 字符串索引 0，语言 */
+const uint8_t _manufacture_string_id = 1; /* 字符串索引 1，厂商 */
+const uint8_t _product_string_id     = 2; /* 字符串索引 2，产品 */
+const uint8_t _serial_string_id      = 3; /* 字符串索引 3，序列号 */
 
 /* USB 字符串描述符 */
 static const uint16_t* _usb_string_desc[] = {
-    [0] = language_string_desc,
-    [1] = manufacture_string_desc,
-    [2] = product_string_desc,
-    [3] = serial_string_desc,
+    [0] = _language_string_desc,
+    [1] = _manufacture_string_desc,
+    [2] = _product_string_desc,
+    [3] = _serial_string_desc,
 };
 
 /*
@@ -67,20 +67,20 @@ static const uint16_t* _usb_string_desc[] = {
 static const tusb_desc_device_t _usb_device_desc = {
     .bLength         = sizeof(tusb_desc_device_t), /* 设备描述符长度，固定为18 */
     .bDescriptorType = TUSB_DESC_DEVICE,           /* 描述符类型，固定为设备描述符 1 */
-    .bcdUSB          = usb_version,                /* USB版本，固定为 2.0 */
+    .bcdUSB          = _usb_version,               /* USB版本，固定为 2.0 */
 
     .bDeviceClass    = 0x00,                   /* 设备类别，HID不在设备描述符中定义，固定为 0 */
     .bDeviceSubClass = 0x00,                   /* 设备子类别，HID不在设备描述符中定义，固定为 0 */
     .bDeviceProtocol = 0x00,                   /* 设备协议，HID不在设备描述符中定义，固定为 0 */
     .bMaxPacketSize0 = CFG_TUD_ENDPOINT0_SIZE, /* 端点0最大包大小，固定为 64 */
 
-    .idVendor  = vendor_id,      /* 厂商ID */
-    .idProduct = product_id,     /* 产品ID */
-    .bcdDevice = device_release, /* 版本号 */
+    .idVendor  = _vendor_id,      /* 厂商ID */
+    .idProduct = _product_id,     /* 产品ID */
+    .bcdDevice = _device_release, /* 版本号 */
 
-    .iManufacturer = manufacture_string_id, /* 厂商的字符描述符索引 */
-    .iProduct      = product_string_id,     /* 产品的字符描述符索引 */
-    .iSerialNumber = serial_string_id,      /* 序列号的字符描述符索引 */
+    .iManufacturer = _manufacture_string_id, /* 厂商的字符描述符索引 */
+    .iProduct      = _product_string_id,     /* 产品的字符描述符索引 */
+    .iSerialNumber = _serial_string_id,      /* 序列号的字符描述符索引 */
 
     .bNumConfigurations = 1, /* 配置描述符数量，固定为 1 */
 };
