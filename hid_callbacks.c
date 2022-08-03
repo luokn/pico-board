@@ -1,4 +1,5 @@
 #include <stddef.h>
+#include <stdio.h>
 
 #include "blink.h"
 #include "bsp/board.h"
@@ -8,14 +9,20 @@
 // Application can use this to send the next report
 // Note: For composite reports, report[0] is report ID
 void tud_hid_report_complete_cb(uint8_t instance, uint8_t const* report, uint8_t len) {
-    (void) instance;
-    (void) len;
+    // uint8_t next_report_id = report[0] + 1;
 
-    uint8_t next_report_id = report[0] + 1;
+    // if (next_report_id < REPORT_ID_COUNT) {
+    //     hid_report_send(next_report_id, board_button_read());
+    // }
 
-    if (next_report_id < REPORT_ID_COUNT) {
-        hid_report_send(next_report_id, board_button_read());
+    printf("tud_hid_report_complete_cb()\n");
+    printf("    instance: %u\n", instance);
+
+    printf("    report: [", report);
+    for (size_t i = 0; i < len; i++) {
+        printf("%02x ", report[i]);
     }
+    printf("])\n");
 }
 
 // Invoked when received GET_REPORT control request
@@ -24,11 +31,13 @@ void tud_hid_report_complete_cb(uint8_t instance, uint8_t const* report, uint8_t
 uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t* buffer,
                                uint16_t reqlen) {
     // TODO not Implemented
-    (void) instance;
-    (void) report_id;
-    (void) report_type;
-    (void) buffer;
-    (void) reqlen;
+
+    printf("tud_hid_get_report_cb()\n");
+    printf("    instance: %u\n", instance);
+    printf("    report_id: %u\n", report_id);
+    printf("    report_type: %u\n", report_type);
+    printf("    buffer: %p\n", buffer);
+    printf("    reqlen: %u\n", reqlen);
 
     return 0;
 }
@@ -37,7 +46,12 @@ uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_t
 // received data on OUT endpoint ( Report ID = 0, Type = 0 )
 void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t const* buffer,
                            uint16_t bufsize) {
-    (void) instance;
+    printf("tud_hid_set_report_cb()\n");
+    printf("    instance: %u\n", instance);
+    printf("    report_id: %u\n", report_id);
+    printf("    report_type: %u\n", report_type);
+    printf("    buffer: %p\n", buffer);
+    printf("    bufsize: %u\n", bufsize);
 
     if (report_type == HID_REPORT_TYPE_OUTPUT) {
         // Set keyboard LED e.g Capslock, Numlock etc...

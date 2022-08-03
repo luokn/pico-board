@@ -43,6 +43,8 @@ void hid_report_task(void);
 
 uint32_t blink_interval_ms = BLINK_NOT_MOUNTED;
 
+const uint8_t key_table[][2] = {HID_ASCII_TO_KEYCODE};
+
 /*------------- MAIN -------------*/
 int main(void) {
     board_init();
@@ -53,9 +55,19 @@ int main(void) {
         led_blink_task();
         hid_report_task();
 
-        if (i % 1000000 == 0) {
-            printf("board_millis: %u\n", board_millis());
-        }
+        // char chr;
+        // scanf("%c", &chr);
+
+        // uint8_t modifier   = 0;
+        // uint8_t keycode[6] = {0};
+
+        // if (key_table[chr][0]) {
+        //     modifier = KEYBOARD_MODIFIER_LEFTSHIFT;
+        // }
+        // keycode[0] = key_table[chr][1];
+        // // tud_hid_keyboard_report(report_id, modifier, keycode);
+
+        // tud_hid_keyboard_report(REPORT_ID_KEYBOARD, modifier, keycode);
     }
 
     return 0;

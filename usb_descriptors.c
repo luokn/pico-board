@@ -119,7 +119,7 @@ static const uint8_t _usb_config_desc[] = {
         /* protocol                 = */ HID_ITF_PROTOCOL_NONE,    /* 无协议 */
         /* report descriptor len    = */ sizeof(_hid_report_desc), /* HID报文描述符长度 */
 
-        /* EP In address    = */ 0x81, /* 端点描述符：地址及输入属性，bit 7为输入 1, bit 0-3与其他位为 0 */
+        /* EP In address    = */ 0x81, /* 端点描述符：地址及输入属性，bit 7为 1(输入), bit 0-3 位 1(端点号) */
         /* size             = */ CFG_TUD_HID_EP_BUFSIZE, /* 端点描述符：缓冲区大小为 16 bytes*/
         /* polling interval = */ 5),                     /* 端点描述符：主机轮询间隔为 5ms */
 };

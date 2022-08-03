@@ -1,6 +1,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #include "blink.h"
 #include "usb_descriptors.h"
@@ -39,12 +40,16 @@ const uint16_t* tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
 //--------------------------------------------------------------------+
 
 // Invoked when device is mounted
-void tud_mount_cb(void) {
+void tud_mount_cb() {
+    printf("tud_mount_cb()\n");
+
     blink_interval_ms = BLINK_MOUNTED;
 }
 
 // Invoked when device is unmounted
-void tud_umount_cb(void) {
+void tud_umount_cb() {
+    printf("tud_umount_cb()\n");
+
     blink_interval_ms = BLINK_NOT_MOUNTED;
 }
 
@@ -52,11 +57,15 @@ void tud_umount_cb(void) {
 // remote_wakeup_en : if host allow us  to perform remote wakeup
 // Within 7ms, device must draw an average of current less than 2.5 mA from bus
 void tud_suspend_cb(bool remote_wakeup_en) {
-    (void) remote_wakeup_en;
+    printf("tud_suspend_cb()\n");
+    printf("remote_wakeup_en: %s\n", remote_wakeup_en ? "true" : "false");
+
     blink_interval_ms = BLINK_SUSPENDED;
 }
 
 // Invoked when usb bus is resumed
-void tud_resume_cb(void) {
+void tud_resume_cb() {
+    printf("tud_resume_cb()\n");
+
     blink_interval_ms = BLINK_MOUNTED;
 }
