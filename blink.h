@@ -13,4 +13,6 @@ enum blink_pattern {
     BLINK_SUSPENDED   = 2500,
 };
 
-extern uint32_t blink_interval_ms;
+void               led_blink_task();
+void               blink_set_pattern(enum blink_pattern);
+enum blink_pattern blink_get_pattern();

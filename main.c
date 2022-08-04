@@ -29,87 +29,56 @@
 
 #include "blink.h"
 #include "bsp/board.h"
+#include "hardware/irq.h"
+#include "hardware/uart.h"
 #include "hid_report.h"
+#include "pico/multicore.h"
 #include "pico/stdio.h"
 #include "tusb.h"
 #include "usb_descriptors.h"
 
-//--------------------------------------------------------------------+
-// MACRO CONSTANT TYPEDEF PROTYPES
-//--------------------------------------------------------------------+
-
-void led_blink_task(void);
-void hid_report_task(void);
-
-uint32_t blink_interval_ms = BLINK_NOT_MOUNTED;
+// void hid_report_task(void);
 
 const uint8_t key_table[][2] = {HID_ASCII_TO_KEYCODE};
 
-/*------------- MAIN -------------*/
-int main(void) {
+int main() {
     board_init();
-    tusb_init();
 
-    for (size_t i = 0;; i++) {
-        tud_task();  // tinyusb device task
+    for (;;) {
         led_blink_task();
-        hid_report_task();
 
-        // char chr;
-        // scanf("%c", &chr);
-
-        // uint8_t modifier   = 0;
-        // uint8_t keycode[6] = {0};
-
-        // if (key_table[chr][0]) {
-        //     modifier = KEYBOARD_MODIFIER_LEFTSHIFT;
-        // }
-        // keycode[0] = key_table[chr][1];
-        // // tud_hid_keyboard_report(report_id, modifier, keycode);
-
-        // tud_hid_keyboard_report(REPORT_ID_KEYBOARD, modifier, keycode);
+        if (uart_is_readable_within_us(uart0, 250)) {
+            char ch = uart_getc(uart0);
+            printf("read char: %c, [0x%02X]\n", ch, ch);
+        }
     }
 
     return 0;
 }
 
-//--------------------------------------------------------------------+
-// BLINKING TASK
-//--------------------------------------------------------------------+
-void led_blink_task() {
-    static uint32_t start_ms  = 0;
-    static bool     led_state = false;
+// int main(void) {
+//     board_init();
+//     tusb_init();
 
-    // blink is disabled
-    if (!blink_interval_ms) return;
+//     for (;;) {
+//         tud_task();  // tinyusb device task
+//         led_blink_task();
+//         // hid_report_task();
 
-    // Blink every interval ms
-    if (board_millis() - start_ms < blink_interval_ms) return;  // not enough time
-    start_ms += blink_interval_ms;
+//         char chr;
+//         scanf("%c", &chr);
 
-    board_led_write(led_state);
-    led_state = 1 - led_state;  // toggle
-}
+//         uint8_t modifier   = 0;
+//         uint8_t keycode[6] = {0};
 
-// Every 10ms, we will sent 1 report for each HID profile (keyboard, mouse etc ..)
-// tud_hid_report_complete_cb() is used to send the next report after previous one is complete
-void hid_report_task() {
-    // Poll every 10ms
-    const uint32_t  interval_ms = 10;
-    static uint32_t start_ms    = 0;
+//         if (key_table[chr][0]) {
+//             modifier = KEYBOARD_MODIFIER_LEFTSHIFT;
+//         }
+//         keycode[0] = key_table[chr][1];
+//         // tud_hid_keyboard_report(report_id, modifier, keycode);
 
-    if (board_millis() - start_ms < interval_ms) return;  // not enough time
-    start_ms += interval_ms;
+//         tud_hid_keyboard_report(REPORT_ID_KEYBOARD, modifier, keycode);
+//     }
 
-    uint32_t const btn = board_button_read();
-
-    // Remote wakeup
-    if (tud_suspended() && btn) {
-        // Wake up host if we are in suspend mode
-        // and REMOTE_WAKEUP feature is enabled by host
-        tud_remote_wakeup();
-    } else {
-        // Send the 1st of report chain, the rest will be sent by tud_hid_report_complete_cb()
-        hid_report_send(REPORT_ID_KEYBOARD, btn);
-    }
-}
+//     return 0;
+// }

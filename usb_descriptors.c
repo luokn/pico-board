@@ -91,7 +91,7 @@ static const tusb_desc_device_t _usb_device_desc = {
  +-------------------------------------+
 */
 
-const uint8_t _hid_report_desc[] = {
+static const uint8_t _hid_report_desc[] = {
     TUD_HID_REPORT_DESC_KEYBOARD(HID_REPORT_ID(REPORT_ID_KEYBOARD)),         /* HID报文描述符：键盘报文 */
     TUD_HID_REPORT_DESC_MOUSE(HID_REPORT_ID(REPORT_ID_MOUSE)),               /* HID报文描述符：鼠标报文 */
     TUD_HID_REPORT_DESC_CONSUMER(HID_REPORT_ID(REPORT_ID_CONSUMER_CONTROL)), /* HID报文描述符：媒体报文 */
@@ -103,6 +103,9 @@ const uint8_t _hid_report_desc[] = {
  |              USB 配置描述符                     |
  +------------------------------------------------+
 */
+
+const uint8_t _input_endpoint_address  = 0x81; /* 端点地址，IN端点，端点1 */
+const uint8_t _output_endpoint_address = 0x02; /* 端点地址，OUT端点，端点2 */
 
 static const uint8_t _usb_config_desc[] = {
     TUD_CONFIG_DESCRIPTOR(
@@ -119,7 +122,8 @@ static const uint8_t _usb_config_desc[] = {
         /* protocol                 = */ HID_ITF_PROTOCOL_NONE,    /* 无协议 */
         /* report descriptor len    = */ sizeof(_hid_report_desc), /* HID报文描述符长度 */
 
-        /* EP In address    = */ 0x81, /* 端点描述符：地址及输入属性，bit 7为 1(输入), bit 0-3 位 1(端点号) */
+        /* EP In address    = */ _input_endpoint_address, /* 端点描述符：地址及输入属性，bit 7为 1(输入), bit 0-3 位
+                                                             1(端点号) */
         /* size             = */ CFG_TUD_HID_EP_BUFSIZE, /* 端点描述符：缓冲区大小为 16 bytes*/
         /* polling interval = */ 5),                     /* 端点描述符：主机轮询间隔为 5ms */
 };

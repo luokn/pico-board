@@ -53,23 +53,23 @@ void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_
     printf("    buffer: %p\n", buffer);
     printf("    bufsize: %u\n", bufsize);
 
-    if (report_type == HID_REPORT_TYPE_OUTPUT) {
-        // Set keyboard LED e.g Capslock, Numlock etc...
-        if (report_id == REPORT_ID_KEYBOARD) {
-            // bufsize should be (at least) 1
-            if (bufsize < 1) return;
+    // if (report_type == HID_REPORT_TYPE_OUTPUT) {
+    //     // Set keyboard LED e.g Capslock, Numlock etc...
+    //     if (report_id == REPORT_ID_KEYBOARD) {
+    //         // bufsize should be (at least) 1
+    //         if (bufsize < 1) return;
 
-            uint8_t const kbd_leds = buffer[0];
+    //         uint8_t const kbd_leds = buffer[0];
 
-            if (kbd_leds & KEYBOARD_LED_CAPSLOCK) {
-                // Capslock On: disable blink, turn led on
-                blink_interval_ms = 0;
-                board_led_write(true);
-            } else {
-                // Caplocks Off: back to normal blink
-                board_led_write(false);
-                blink_interval_ms = BLINK_MOUNTED;
-            }
-        }
-    }
+    //         if (kbd_leds & KEYBOARD_LED_CAPSLOCK) {
+    //             // Capslock On: disable blink, turn led on
+    //             blink_intv_ms = 0;
+    //             board_led_write(true);
+    //         } else {
+    //             // Caplocks Off: back to normal blink
+    //             board_led_write(false);
+    //             blink_intv_ms = BLINK_MOUNTED;
+    //         }
+    //     }
+    // }
 }
