@@ -89,22 +89,22 @@ static void _send_gamepad(uint32_t btn) {
 // Every 10ms, we will sent 1 report for each HID profile (keyboard, mouse etc ..)
 // tud_hid_report_complete_cb() is used to send the next report after previous one is complete
 void hid_report_task() {
-    // Poll every 10ms
-    const uint32_t  interval_ms = 10;
-    static uint32_t start_ms    = 0;
+    const uint32_t  interval  = 10; /* Poll every 10ms */
+    static uint32_t prev_time = 0;
+    uint32_t        curr_time = board_millis();
 
-    if (board_millis() - start_ms < interval_ms) return;  // not enough time
-    start_ms += interval_ms;
+    if (curr_time - prev_time < interval) return; /* not enough time */
 
-    uint32_t const btn = board_button_read();
+    prev_time         = curr_time;
+    uint32_t const on = board_button_read();
 
     // Remote wakeup
-    if (tud_suspended() && btn) {
+    if (tud_suspended() && on) {
         // Wake up host if we are in suspend mode
         // and REMOTE_WAKEUP feature is enabled by host
         tud_remote_wakeup();
     } else {
         // Send the 1st of report chain, the rest will be sent by tud_hid_report_complete_cb()
-        hid_report_send(REPORT_ID_KEYBOARD, btn);
+        hid_report_send(REPORT_ID_KEYBOARD, on);
     }
 }

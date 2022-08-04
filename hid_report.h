@@ -11,3 +11,4 @@ enum hid_report_id {
 };
 
 void hid_report_send(uint8_t report_id, uint32_t btn);
+void hid_report_task();
