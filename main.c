@@ -39,21 +39,18 @@
 
 // void hid_report_task(void);
 
-const uint8_t key_table[][2] = {HID_ASCII_TO_KEYCODE};
+// const uint8_t key_table[][2] = {HID_ASCII_TO_KEYCODE};
 
 int main() {
     board_init();
+
     tusb_init();
+    printf("\x1b[1;32m[USB]\x1b[0m tusb_init()\n");
 
     for (;;) {
-        tud_task();  // tinyusb device task
+        tud_task(); /* tinyusb device task */
         led_blink_task();
         hid_report_task();
-
-        // if (uart_is_readable_within_us(uart0, 250)) {
-        //     char ch = uart_getc(uart0);
-        //     printf("read char: %c, [0x%02X]\n", ch, ch);
-        // }
     }
 
     return 0;

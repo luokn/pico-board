@@ -15,14 +15,13 @@ void tud_hid_report_complete_cb(uint8_t instance, uint8_t const* report, uint8_t
     //     hid_report_send(next_report_id, board_button_read());
     // }
 
-    printf("tud_hid_report_complete_cb()\n");
-    printf("    instance: %u\n", instance);
+    uint8_t report_id = report[0];
 
-    printf("    report: [", report);
-    for (size_t i = 0; i < len; i++) {
+    printf("\x1b[1;35m[HID]\x1b[0m tud_hid_report_complete_cb(): id = %u, report = [", report_id);
+    for (uint8_t i = 1; i < len; i++) {
         printf("%02x ", report[i]);
     }
-    printf("])\n");
+    printf("]\n");
 }
 
 // Invoked when received GET_REPORT control request
@@ -32,13 +31,7 @@ uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_t
                                uint16_t reqlen) {
     // TODO not Implemented
 
-    printf("tud_hid_get_report_cb()\n");
-    printf("    instance: %u\n", instance);
-    printf("    report_id: %u\n", report_id);
-    printf("    report_type: %u\n", report_type);
-    printf("    buffer: %p\n", buffer);
-    printf("    reqlen: %u\n", reqlen);
-
+    printf("\x1b[1;35m[HID]\x1b[0m tud_hid_get_report_cb(): id = %u, type = %u\n", report_id, report_type);
     return 0;
 }
 
@@ -46,12 +39,7 @@ uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_t
 // received data on OUT endpoint ( Report ID = 0, Type = 0 )
 void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t const* buffer,
                            uint16_t bufsize) {
-    printf("tud_hid_set_report_cb()\n");
-    printf("    instance: %u\n", instance);
-    printf("    report_id: %u\n", report_id);
-    printf("    report_type: %u\n", report_type);
-    printf("    buffer: %p\n", buffer);
-    printf("    bufsize: %u\n", bufsize);
+    printf("\x1b[1;35m[HID]\x1b[0m tud_hid_set_report_cb(): id = %u, type = %u\n", report_id, report_type);
 
     // if (report_type == HID_REPORT_TYPE_OUTPUT) {
     //     // Set keyboard LED e.g Capslock, Numlock etc...
@@ -75,7 +63,5 @@ void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_
 }
 
 void tud_hid_set_protocol_cb(uint8_t instance, uint8_t protocol) {
-    printf("tud_hid_set_protocol_cb()\n");
-    printf("    instance: %u\n", instance);
-    printf("    protocol: %u\n", protocol);
+    printf("\x1b[1;35m[HID]\x1b[0m tud_hid_set_protocol_cb(): protocol = %u\n", protocol);
 }

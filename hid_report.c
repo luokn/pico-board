@@ -37,7 +37,9 @@ static void _send_keyboard(uint32_t btn) {
         has_keyboard_key = true;
     } else {
         // send empty key report if previously has key pressed
-        if (has_keyboard_key) tud_hid_keyboard_report(REPORT_ID_KEYBOARD, 0, NULL);
+        if (has_keyboard_key) {
+            tud_hid_keyboard_report(REPORT_ID_KEYBOARD, 0, NULL);
+        }
         has_keyboard_key = false;
     }
 }
@@ -94,17 +96,36 @@ void hid_report_task() {
     uint32_t        curr_time = board_millis();
 
     if (curr_time - prev_time < interval) return; /* not enough time */
+    prev_time = curr_time;
 
-    prev_time         = curr_time;
-    uint32_t const on = board_button_read();
+    if (tud_suspended()) return;
 
-    // Remote wakeup
-    if (tud_suspended() && on) {
-        // Wake up host if we are in suspend mode
-        // and REMOTE_WAKEUP feature is enabled by host
-        tud_remote_wakeup();
+    // // Remote wakeup
+    // if (tud_suspended() && on) {
+    //     // Wake up host if we are in suspend mode
+    //     // and REMOTE_WAKEUP feature is enabled by host
+    //     tud_remote_wakeup();
+    // } else {
+    // Send the 1st of report chain, the rest will be sent by tud_hid_report_complete_cb()
+    // hid_report_send(REPORT_ID_KEYBOARD, on);
+
+    // }
+
+    static bool has_sent_report = false;
+
+    if (board_button_read()) {
+        uint8_t keycode[6] = {
+            HID_KEY_CONTROL_LEFT, HID_KEY_A, 0, 0, 0, 0,
+        };
+        tud_hid_keyboard_report(REPORT_ID_KEYBOARD, 0, keycode);
+
+        has_sent_report = true;
     } else {
-        // Send the 1st of report chain, the rest will be sent by tud_hid_report_complete_cb()
-        hid_report_send(REPORT_ID_KEYBOARD, on);
+        if (has_sent_report) {
+            uint8_t keycode[6] = {0};
+            tud_hid_keyboard_report(REPORT_ID_KEYBOARD, 0, keycode);
+        }
+
+        has_sent_report = false;
     }
 }
