@@ -73,3 +73,9 @@ void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_
     //     }
     // }
 }
+
+void tud_hid_set_protocol_cb(uint8_t instance, uint8_t protocol) {
+    printf("tud_hid_set_protocol_cb()\n");
+    printf("    instance: %u\n", instance);
+    printf("    protocol: %u\n", protocol);
+}
