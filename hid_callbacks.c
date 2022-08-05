@@ -17,7 +17,7 @@ void tud_hid_report_complete_cb(uint8_t instance, uint8_t const* report, uint8_t
 
     uint8_t report_id = report[0];
 
-    printf("\x1b[1;35m[HID]\x1b[0m tud_hid_report_complete_cb(): id = %u, report = [", report_id);
+    printf("\x1b[1;35m[HID]\x1b[0m tud_hid_report_complete_cb(): id = %u, report = [ ", report_id);
     for (uint8_t i = 1; i < len; i++) {
         printf("%02x ", report[i]);
     }
@@ -39,7 +39,11 @@ uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_t
 // received data on OUT endpoint ( Report ID = 0, Type = 0 )
 void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t const* buffer,
                            uint16_t bufsize) {
-    printf("\x1b[1;35m[HID]\x1b[0m tud_hid_set_report_cb(): id = %u, type = %u\n", report_id, report_type);
+    printf("\x1b[1;35m[HID]\x1b[0m tud_hid_set_report_cb(): id = %u, type = %u, buffer = [ ", report_id, report_type);
+    for (uint16_t i = 0; i < bufsize; i++) {
+        printf("%02x ", buffer[i]);
+    }
+    printf("]\n");
 
     // if (report_type == HID_REPORT_TYPE_OUTPUT) {
     //     // Set keyboard LED e.g Capslock, Numlock etc...
