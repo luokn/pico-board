@@ -30,9 +30,18 @@ void tud_hid_report_complete_cb(uint8_t instance, uint8_t const* report, uint8_t
 uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t* buffer,
                                uint16_t reqlen) {
     // TODO not Implemented
+    hid_keyboard_report_t report;
 
     printf("\x1b[1;35m[HID]\x1b[0m tud_hid_get_report_cb(): id = %u, type = %u\n", report_id, report_type);
-    return 0;
+
+    if (reqlen < sizeof(report)) return 0;
+
+    uint8_t keycode[6] = {HID_KEY_CAPS_LOCK, 0, 0, 0, 0, 0};
+    report.modifier    = 0;
+    report.reserved    = 0;
+    memcpy(report.keycode, keycode, sizeof(report.keycode));
+    memcpy(buffer, &report, sizeof(report));
+    return sizeof(report);
 }
 
 // Invoked when received SET_REPORT control request or
