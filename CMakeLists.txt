@@ -6,7 +6,6 @@ project(my_pico)
 
 pico_sdk_init()
 
-
 add_executable(my_pico main.c blink.c)
 
 target_include_directories(my_pico PUBLIC 

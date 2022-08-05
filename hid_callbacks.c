@@ -65,3 +65,8 @@ void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_
 void tud_hid_set_protocol_cb(uint8_t instance, uint8_t protocol) {
     printf("\x1b[1;35m[HID]\x1b[0m tud_hid_set_protocol_cb(): protocol = %u\n", protocol);
 }
+
+bool tud_hid_set_idle_cb(uint8_t instance, uint8_t idle_rate) {
+    printf("\x1b[1;35m[HID]\x1b[0m tud_hid_set_idle_cb(): idle_rate = %u\n", idle_rate);
+    return true;
+}
