@@ -23,7 +23,7 @@ void hid_report_task() {
 
     if (board_button_read()) {
         if (!has_sent_report) {
-            uint8_t keycode[6] = {HID_KEY_1, 0, 0, 0, 0, 0};
+            uint8_t keycode[6] = {HID_KEY_CAPS_LOCK, 0, 0, 0, 0, 0};
             tud_hid_keyboard_report(KEYBOARD_REPORT_ID, 0, keycode);
         }
 

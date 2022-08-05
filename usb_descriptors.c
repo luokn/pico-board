@@ -104,19 +104,19 @@ static const uint8_t _hid_report_desc[] = {
  +------------------------------------------------+
 */
 
-const uint8_t _input_endpoint_address  = 0x81; /* 端点地址，IN端点，端点1 */
-const uint8_t _output_endpoint_address = 0x02; /* 端点地址，OUT端点，端点2 */
+const uint8_t _input_endpoint_address = 0x81; /* 端点地址，IN端点，端点1 */
+// const uint8_t _output_endpoint_address = 0x02; /* 端点地址，OUT端点，端点2 */
 
 static const uint8_t _usb_config_desc[] = {
     TUD_CONFIG_DESCRIPTOR(
-        /* config number    = */ 1,                                            /* 配置编号: 1 */
-        /* interface count  = */ 1,                                            /* 接口数量: 1 */
-        /* string index     = */ 0,                                            /* 字符索引: 0(无字符串) */
-        /* total length     = */ TUD_CONFIG_DESC_LEN + TUD_HID_INOUT_DESC_LEN, /* 总共长度: USB + HID */
-        /* attribute        = */ TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP,           /* 供电特性: 远程唤醒 */
-        /* power in mA      = */ 98),                                          /* 电源电流: 98mA */
+        /* config number    = */ 1,                                      /* 配置编号: 1 */
+        /* interface count  = */ 1,                                      /* 接口数量: 1 */
+        /* string index     = */ 0,                                      /* 字符索引: 0(无字符串) */
+        /* total length     = */ TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN, /* 总共长度: USB + HID */
+        /* attribute        = */ TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP,     /* 供电特性: 远程唤醒 */
+        /* power in mA      = */ 98),                                    /* 电源电流: 98mA */
 
-    TUD_HID_INOUT_DESCRIPTOR(
+    TUD_HID_DESCRIPTOR(
         /*
          * USB 接口描述符
          */
@@ -127,13 +127,12 @@ static const uint8_t _usb_config_desc[] = {
         /* report descriptor len    = */ sizeof(_hid_report_desc),  /* HID报文描述符长度 */
 
         /*
-         * USB 配置描述符 + HID 报文描述符 + 输出端点描述符 + 输入端点描述符
+         * USB 配置描述符 + HID 报文描述符 + 输入端点描述符
          */
 
-        /* EP out address   = */ _output_endpoint_address, /* 端点描述符: 输出地址 */
-        /* EP In address    = */ _input_endpoint_address,  /* 端点描述符：输入地址 */
-        /* size             = */ CFG_TUD_HID_EP_BUFSIZE,   /* 端点描述符：缓冲大小(16B)*/
-        /* polling interval = */ 4),                       /* 端点描述符：主机轮询间隔(4ms) */
+        /* EP In address    = */ _input_endpoint_address, /* 端点描述符：输入地址 */
+        /* size             = */ CFG_TUD_HID_EP_BUFSIZE,  /* 端点描述符：缓冲大小(16B)*/
+        /* polling interval = */ 4),                      /* 端点描述符：主机轮询间隔(4ms) */
 };
 
 const uint8_t*   usb_device_desc     = (const uint8_t*) &_usb_device_desc;
