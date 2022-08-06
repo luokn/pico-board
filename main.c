@@ -13,17 +13,6 @@
 #include "pico/multicore.h"
 #include "tusb.h"
 
-void setup();
-void loop();
-
-int main() {
-    for (setup();;) {
-        loop();
-    }
-
-    return 0;
-}
-
 void setup() {
     /*
      * Init board.
@@ -46,14 +35,18 @@ void loop() {
     tud_task();
 
     /*
-     * Blink LED.
-     */
-
-    led_blink_task();
-
-    /*
      * Report keyboard.
      */
 
     hid_report_task();
+}
+
+int main() {
+    setup();
+
+    for (;;) {
+        loop();
+    }
+
+    return 0;
 }
