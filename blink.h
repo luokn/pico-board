@@ -1,3 +1,10 @@
+/*
+ * @Data  : 2022/08/06
+ * @File  : blink.h
+ * @Author: Kun Luo
+ * @Email : luokun485@gmail.com
+ */
+
 #pragma once
 
 #include <stdint.h>

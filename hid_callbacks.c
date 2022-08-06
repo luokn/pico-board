@@ -1,20 +1,17 @@
-#include <stddef.h>
+/*
+ * @Data  : 2022/08/06
+ * @File  : hid_callbacks.c
+ * @Author: Kun Luo
+ * @Email : luokun485@gmail.com
+ */
+
 #include <stdio.h>
 
 #include "blink.h"
 #include "bsp/board.h"
 #include "hid_report.h"
 
-// Invoked when sent REPORT successfully to host
-// Application can use this to send the next report
-// Note: For composite reports, report[0] is report ID
 void tud_hid_report_complete_cb(uint8_t instance, uint8_t const* report, uint8_t len) {
-    // uint8_t next_report_id = report[0] + 1;
-
-    // if (next_report_id < REPORT_ID_COUNT) {
-    //     hid_report_send(next_report_id, board_button_read());
-    // }
-
     uint8_t report_id = report[0];
 
     printf("\x1b[1;35m[HID]\x1b[0m tud_hid_report_complete_cb(): id = %u, report = [ ", report_id);
@@ -24,12 +21,8 @@ void tud_hid_report_complete_cb(uint8_t instance, uint8_t const* report, uint8_t
     printf("]\n");
 }
 
-// Invoked when received GET_REPORT control request
-// Application must fill buffer report's content and return its length.
-// Return zero will cause the stack to STALL request
 uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t* buffer,
                                uint16_t reqlen) {
-    // TODO not Implemented
     hid_keyboard_report_t report;
 
     printf("\x1b[1;35m[HID]\x1b[0m tud_hid_get_report_cb(): id = %u, type = %u\n", report_id, report_type);
@@ -44,8 +37,6 @@ uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_t
     return sizeof(report);
 }
 
-// Invoked when received SET_REPORT control request or
-// received data on OUT endpoint ( Report ID = 0, Type = 0 )
 void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t const* buffer,
                            uint16_t bufsize) {
     printf("\x1b[1;35m[HID]\x1b[0m tud_hid_set_report_cb(): id = %u, type = %u, buffer = [ ", report_id, report_type);

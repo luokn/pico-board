@@ -1,3 +1,10 @@
+/*
+ * @Data  : 2022/08/06
+ * @File  : hid_report.c
+ * @Author: Kun Luo
+ * @Email : luokun485@gmail.com
+ */
+
 #include "hid_report.h"
 
 #include <stddef.h>
@@ -7,8 +14,6 @@
 #include "tusb.h"
 #include "usb_descriptors.h"
 
-// Every 10ms, we will sent 1 report for each HID profile (keyboard, mouse etc ..)
-// tud_hid_report_complete_cb() is used to send the next report after previous one is complete
 void hid_report_task() {
     const uint32_t  interval  = 10; /* Poll every 10ms */
     static uint32_t prev_time = 0;

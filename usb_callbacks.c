@@ -1,6 +1,11 @@
+/*
+ * @Data  : 2022/08/06
+ * @File  : usb_callbacks.c
+ * @Author: Kun Luo
+ * @Email : luokun485@gmail.com
+ */
+
 #include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
 #include <stdio.h>
 
 #include "blink.h"
