@@ -20,6 +20,14 @@ void setup() {
 
     board_init();
 
+    static const uint8_t arr[] = {
+        [0] = 1,
+        [2] = 1,
+        [3] = 0,
+    };
+
+    printf("[%d, %d, %d, %d]\n", arr[0], arr[1], arr[2], arr[3]);
+
     /*
      * Init USB.
      */

@@ -6,7 +6,7 @@ project(my_pico)
 
 pico_sdk_init()
 
-add_executable(my_pico main.c blink.c pico_board.c)
+add_executable(my_pico main.c blink.c pico_board.c pico_layout.c)
 
 target_include_directories(my_pico PUBLIC 
     ${CMAKE_CURRENT_LIST_DIR}
