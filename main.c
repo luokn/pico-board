@@ -7,16 +7,12 @@
 
 #include <stdio.h>
 
-#include "pico/multicore.h"
 #include "pico_board.h"
-#include "tusb.h"
-#include "usb_descriptors.h"
 
 int main() {
     pico_board_init(); /* Init board. */
-    printf("\x1b[1;32m[USB]\x1b[0m tusb_init()\n");
 
-    for (;;) {
+    while (1) {
         pico_board_task();
     }
 
