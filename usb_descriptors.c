@@ -7,13 +7,25 @@
 
 #include "usb_descriptors.h"
 
-#include "hid_report.h"
 #include "tusb.h"
 
 static const uint16_t _usb_version    = 0x0200; /* USB 2.0 */
 static const uint16_t _vendor_id      = 0xabcd; /* 厂商ID */
 static const uint16_t _product_id     = 0x0001; /* 产品ID */
 static const uint16_t _device_release = 0x0001; /* 版本号 */
+
+/*
+ +-------------------------------------+
+ |          HID 报文描述符              |
+ +-------------------------------------+
+*/
+
+static const uint8_t _hid_report_desc[] = {
+    TUD_HID_REPORT_DESC_KEYBOARD(HID_REPORT_ID(HID_REPORT_ID_KEYBOARD)), /* HID报文描述符：键盘报文 */
+    TUD_HID_REPORT_DESC_MOUSE(HID_REPORT_ID(HID_REPORT_ID_MOUSE)),       /* HID报文描述符：鼠标报文 */
+    TUD_HID_REPORT_DESC_CONSUMER(HID_REPORT_ID(HID_REPORT_ID_CONSUMER)), /* HID报文描述符：用户控制报文 */
+    TUD_HID_REPORT_DESC_GAMEPAD(HID_REPORT_ID(HID_REPORT_ID_GAMEPAD)),   /* HID报文描述符：游戏报文 */
+};
 
 /*
  +---------------------------------+
@@ -68,19 +80,6 @@ static const tusb_desc_device_t _usb_device_desc = {
 };
 
 /*
- +-------------------------------------+
- |          HID 报文描述符              |
- +-------------------------------------+
-*/
-
-static const uint8_t _hid_report_desc[] = {
-    TUD_HID_REPORT_DESC_KEYBOARD(HID_REPORT_ID(KEYBOARD_REPORT_ID)), /* HID报文描述符：键盘报文 */
-    // TUD_HID_REPORT_DESC_MOUSE(HID_REPORT_ID(REPORT_ID_MOUSE)),       /* HID报文描述符：鼠标报文 */
-    TUD_HID_REPORT_DESC_CONSUMER(HID_REPORT_ID(CONSUMER_REPORT_ID)), /* HID报文描述符：用户控制报文 */
-    // TUD_HID_REPORT_DESC_GAMEPAD(HID_REPORT_ID(REPORT_ID_GAMEPAD)),   /* HID报文描述符：游戏报文 */
-};
-
-/*
  +------------------------------------------------+
  |              USB 配置描述符                     |
  +------------------------------------------------+
@@ -91,10 +90,7 @@ const uint8_t _input_endpoint_address = 0x81; /* 端点地址，IN端点，端�
 
 static const uint8_t _usb_config_desc[] = {
     TUD_CONFIG_DESCRIPTOR(
-        /*
-         * USB 配置描述符
-         */
-
+        /* USB 配置描述符 */
         1,                                      /* 配置编号: 1 */
         1,                                      /* 接口数量: 1 */
         0,                                      /* 字符索引: 0(无字符串) */
@@ -104,22 +100,16 @@ static const uint8_t _usb_config_desc[] = {
         ),
 
     TUD_HID_DESCRIPTOR(
-        /*
-         * USB 接口描述符
-         */
-
+        /* USB 接口描述符 */
         0,                         /* 接口编号: 0 */
         0,                         /* 字符索引: 0(无字符串) */
         HID_ITF_PROTOCOL_KEYBOARD, /* 协议类型: HID Boot 键盘 */
         sizeof(_hid_report_desc),  /* HID报文描述符长度 */
 
-        /*
-         * USB 配置描述符 + HID 报文描述符 + 输入端点描述符
-         */
-
+        /* USB 配置描述符 + HID 报文描述符 + 输入端点描述符 */
         _input_endpoint_address, /* 端点描述符：输入地址 */
         CFG_TUD_HID_EP_BUFSIZE,  /* 端点描述符：缓冲大小(16B)*/
-        4                        /* 端点描述符：主机轮询间隔(4ms) */
+        2                        /* 端点描述符：主机轮询间隔(2ms, 500Hz) */
         ),
 };
 

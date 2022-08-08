@@ -6,7 +6,7 @@ project(my_pico)
 
 pico_sdk_init()
 
-add_executable(my_pico main.c blink.c pico_board.c pico_layout.c)
+add_executable(my_pico main.c pico_board.c pico_layout.c)
 
 target_include_directories(my_pico PUBLIC 
     ${CMAKE_CURRENT_LIST_DIR}
@@ -15,7 +15,6 @@ target_include_directories(my_pico PUBLIC
 target_sources(my_pico PUBLIC 
     ${CMAKE_CURRENT_LIST_DIR}/usb_descriptors.c
     ${CMAKE_CURRENT_LIST_DIR}/usb_callbacks.c
-    ${CMAKE_CURRENT_LIST_DIR}/hid_report.c
     ${CMAKE_CURRENT_LIST_DIR}/hid_callbacks.c
 )
 

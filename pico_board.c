@@ -8,17 +8,17 @@
 #include "pico_board.h"
 
 #include "hardware/gpio.h"
-#include "hid_report.h"
+#include "usb_descriptors.h"
 
 pico_board_t pico_board = {0};
 
-static inline uint8_t _pico_board_scan(pico_board_t *board, int8_t pressed[6]) {
+static inline uint8_t _pico_board_scan(pico_board_t *board, uint8_t keys[6]) {
+    uint8_t num_keys = 0;
+
     board->round++;
     if (board->round >= PICO_BOARD_NUM_ROWS) {
         board->round = 0;
     }
-
-    uint8_t count = 0;
 
     for (size_t row = 0; row < PICO_BOARD_NUM_ROWS; row++) {
         /* Select row */
@@ -36,7 +36,7 @@ static inline uint8_t _pico_board_scan(pico_board_t *board, int8_t pressed[6]) {
 
         for (size_t col = 0; col < 16; col++) {
             if (state & (1U << col)) {
-                pressed[count++] = pico_layout[row][col];
+                keys[num_keys++] = pico_layout[row][col];
             }
         }
 
@@ -44,7 +44,27 @@ static inline uint8_t _pico_board_scan(pico_board_t *board, int8_t pressed[6]) {
         board->input_states[board->round][row] = state;
     }
 
-    return count;
+    return num_keys;
+}
+
+void _pico_board_set_keys(pico_board_t *board, const uint8_t *keys, uint8_t num_keys) {
+    pico_board.num_keys = num_keys;
+    memcpy(pico_board.keys, keys, num_keys);
+}
+
+void _pico_board_gen_report(pico_board_t *board) {
+    pico_board.hid_report.size                   = sizeof(hid_keyboard_report_t);
+    pico_board.hid_report.data.keyboard.modifier = 0;
+    pico_board.hid_report.data.keyboard.reserved = 0;
+    memcpy(pico_board.hid_report.data.keyboard.keycode, pico_board.keys, pico_board.num_keys);
+}
+
+void _pico_board_send_report(pico_board_t *board) {
+    if (tud_hid_ready()) {
+        tud_hid_n_report(0, HID_REPORT_ID_KEYBOARD, &pico_board.hid_report, pico_board.hid_report.size);
+
+        pico_board.hid_last_report_time = time_us_64();
+    }
 }
 
 void pico_board_init() {
@@ -59,44 +79,31 @@ void pico_board_task() {
         uint64_t start_us = time_us_64();
         /* ==================================== */
 
-        uint8_t pressed[6] = {0};
-        uint8_t count      = _pico_board_scan(&pico_board, pressed);
+        uint8_t keys[6]  = {0};
+        uint8_t num_keys = _pico_board_scan(&pico_board, keys);
 
-        if (count) {
+        if (num_keys) {
             /*
              * If there is any key pressed, we should send the report to the host, excluding the hi_idle_rate is not 0.
              */
-            if (count == pico_board.count && memcmp(pressed, pico_board.pressed, count) == 0) {
-                if (i == pico_board.hid_idle_rate * 4) {
-                    tud_hid_n_report(0, KEYBOARD_REPORT_ID, &pico_board.hid_report, pico_board.hid_report.size);
-                }
-            } else {
-                pico_board.hid_report.size                   = sizeof(hid_keyboard_report_t);
-                pico_board.hid_report.data.keyboard.modifier = 0;
-                pico_board.hid_report.data.keyboard.reserved = 0;
-                memcpy(pico_board.hid_report.data.keyboard.keycode, pressed, count);
-
-                tud_hid_n_report(0, KEYBOARD_REPORT_ID, &pico_board.hid_report, pico_board.hid_report.size);
+            if (num_keys != pico_board.num_keys || memcmp(keys, pico_board.keys, num_keys) != 0) {
+                _pico_board_gen_report(&pico_board);
+                _pico_board_send_report(&pico_board);
             }
         } else {
             /*
              * If there is no key pressed, we should send the empty report to the host.
              */
-            if (pico_board.count) {
-                pico_board.hid_report.size                   = sizeof(hid_keyboard_report_t);
-                pico_board.hid_report.data.keyboard.modifier = 0;
-                pico_board.hid_report.data.keyboard.reserved = 0;
-                memset(pico_board.hid_report.data.keyboard.keycode, 0, count);
-
-                tud_hid_n_report(0, KEYBOARD_REPORT_ID, &pico_board.hid_report, pico_board.hid_report.size);
+            if (pico_board.num_keys) {
+                _pico_board_gen_report(&pico_board);
+                _pico_board_send_report(&pico_board);
             }
         }
 
         /*
          * Copy pressed array to hid_report.data.keyboard.keys.
          */
-        pico_board.count = count;
-        memcpy(pico_board.pressed, pressed, count);
+        _pico_board_set_keys(&pico_board, keys, num_keys);
 
         /* ==================================== */
         uint32_t elapsed_us = time_us_64() - start_us;

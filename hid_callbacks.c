@@ -7,9 +7,8 @@
 
 #include <stdio.h>
 
-#include "blink.h"
 #include "bsp/board.h"
-#include "hid_report.h"
+#include "usb_descriptors.h"
 
 void tud_hid_report_complete_cb(uint8_t instance, uint8_t const* report, uint8_t len) {
     uint8_t report_id = report[0];
@@ -47,7 +46,7 @@ void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_
     }
     printf("]\n");
 
-    if (report_id == KEYBOARD_REPORT_ID && report_type == HID_REPORT_TYPE_OUTPUT && buf_len) {
+    if (report_id == HID_REPORT_ID_KEYBOARD && report_type == HID_REPORT_TYPE_OUTPUT && buf_len) {
         board_led_write(buf[0] & KEYBOARD_LED_CAPSLOCK);
     }
 }
