@@ -11,7 +11,7 @@
 #include "pico/stdio.h"
 #include "usb_descriptors.h"
 
-// #define USB 1
+// #define USB_ON 1
 
 pico_board_t pico_board = {0};
 
@@ -25,7 +25,7 @@ const uint32_t _gpio_out_base = 2;
 const uint32_t _gpio_out_pins = 6;
 const uint32_t _gpio_out_mask = 0xFC;
 
-static size_t _pico_board_scan(pico_board_t *board, uint8_t *keys, size_t max_keys);
+static size_t _pico_board_scan(pico_board_t *, uint8_t *keys, size_t max_keys);
 
 void pico_board_init() {
     /* Setup input gpios. */
@@ -45,10 +45,10 @@ void pico_board_init() {
     /* Setup stdio. */
     stdio_init_all();
 
-#ifdef USB
-    /* Setup USB. */
+#ifdef USB_ON
+    /* Setup usb. */
     tusb_init();
-    printf("\x1b[1;32m[USB]\x1b[0m tusb_init()\n");
+    printf("\x1b[1;32m[USB_ON]\x1b[0m tusb_init()\n");
 #endif
 }
 
@@ -57,7 +57,7 @@ void pico_board_task() {
         uint64_t start_us = time_us_64();
         /* ==================================== */
 
-#ifdef USB
+#ifdef USB_ON
         /* Process usb events. */
         tud_task();
 #endif
@@ -67,12 +67,6 @@ void pico_board_task() {
         size_t  num_keys = _pico_board_scan(&pico_board, keys, sizeof(keys));
 
         if (num_keys) {
-            printf("\x1b[1;32m[KEY]:\x1b[0m [");
-            for (size_t i = 0; i < num_keys; i++) {
-                printf("%02X ", keys[i]);
-            }
-            printf("]\n");
-
             hid_keyboard_report_t report = {0};
             memcpy(report.keycode, keys, num_keys);
 
@@ -81,8 +75,12 @@ void pico_board_task() {
                 pico_board.hid_report_time = start_us;
                 memcpy(&pico_board.hid_report, &report, sizeof(report));
 
-#ifdef USB
-
+                printf("\x1b[1;32m[KEY]\x1b[0m _pico_board_scan(): [ ");
+                for (size_t i = 0; i < num_keys; i++) {
+                    printf("%02X ", keys[i]);
+                }
+                printf("]\n");
+#ifdef USB_ON
                 if (tud_hid_ready()) {
                     tud_hid_report(pico_board.hid_report_id, &pico_board.hid_report, sizeof(report));
                 }
@@ -94,17 +92,21 @@ void pico_board_task() {
                     pico_board.hid_report_id   = HID_REPORT_ID_NONE;
                     pico_board.hid_report_time = start_us;
                     memset(&pico_board.hid_report, 0, sizeof(hid_keyboard_report_t));
-#ifdef USB
+
+                    printf("\x1b[1;32m[KEY]\x1b[0m _pico_board_scan(): []\n");
+
+#ifdef USB_ON
                     if (tud_hid_ready()) {
                         tud_hid_report(pico_board.hid_report_id, &pico_board.hid_report, sizeof(hid_keyboard_report_t));
                     }
+
 #endif
                 }
                 case HID_REPORT_ID_CONSUMER: {
                     pico_board.hid_report_id   = HID_REPORT_ID_NONE;
                     pico_board.hid_report_time = start_us;
                     memset(&pico_board.hid_report, 0, sizeof(uint16_t));
-#ifdef USB
+#ifdef USB_ON
                     if (tud_hid_ready()) {
                         tud_hid_report(pico_board.hid_report_id, &pico_board.hid_report, sizeof(uint16_t));
                     }
@@ -116,20 +118,22 @@ void pico_board_task() {
 
         /* ==================================== */
         uint32_t elapsed_us = time_us_64() - start_us;
-        if (elapsed_us < 1000 * 1000U) {
-            busy_wait_us_32(1000 * 1000U - elapsed_us);
+        if (elapsed_us < 1000U) {
+            busy_wait_us_32(1000U - elapsed_us);
         }
     }
 }
 
-static size_t _pico_board_scan(pico_board_t *board, uint8_t *keys, size_t max_keys) {
+static size_t _pico_board_scan(pico_board_t *this, uint8_t *keys, size_t max_keys) {
     size_t num_keys = 0;
 
-    board->round++;
-    if (board->round >= PICO_BOARD_NUM_ROWS) {
-        board->round = 0;
+    /* Next round. */
+    this->round++;
+    if (this->round >= PICO_BOARD_NUM_ROWS) {
+        this->round = 0;
     }
 
+    /* Scan the keyboard. */
     for (size_t row = 0; row < _gpio_out_pins; row++) {
         /* Select row */
         gpio_put_masked(_gpio_out_mask, 1U << (_gpio_out_base + row));
@@ -142,13 +146,14 @@ static size_t _pico_board_scan(pico_board_t *board, uint8_t *keys, size_t max_ke
         input >>= _gpio_in_base;
 
         /* Save current input state. */
-        uint32_t prev_input              = board->inputs[board->round][row];
-        board->inputs[board->round][row] = input;
+        uint32_t prev_input            = this->inputs[this->round][row];
+        this->inputs[this->round][row] = input;
 
         /* XOR to get mask and find the unchanged bits. */
         input &= ~(input ^ prev_input);
 
-        for (size_t col = 0; col < _gpio_in_pins; col++, input >> 1) {
+        /* Scan the columns. */
+        for (size_t col = 0; input && col < _gpio_in_pins; col++, input >>= 1) {
             if (input & 1U) {
                 keys[num_keys++] = pico_layout[row][col];
 
@@ -157,6 +162,14 @@ static size_t _pico_board_scan(pico_board_t *board, uint8_t *keys, size_t max_ke
             }
         }
     }
+
+    // if (num_keys) {
+    //     printf("\x1b[1;32m[KEY]\x1b[0m _pico_board_scan(): [");
+    //     for (size_t i = 0; i < num_keys; i++) {
+    //         printf("%02X ", keys[i]);
+    //     }
+    //     printf("]\n");
+    // }
 
     return num_keys;
 }
