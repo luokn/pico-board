@@ -123,7 +123,7 @@ void pico_board_task() {
 }
 
 static size_t _pico_board_scan(pico_board_t *board, uint8_t *keys, size_t max_keys) {
-    size_t count = 0;
+    size_t num_keys = 0;
 
     board->round++;
     if (board->round >= PICO_BOARD_NUM_ROWS) {
@@ -150,13 +150,13 @@ static size_t _pico_board_scan(pico_board_t *board, uint8_t *keys, size_t max_ke
 
         for (size_t col = 0; col < _gpio_in_pins; col++, input >> 1) {
             if (input & 1U) {
-                keys[count++] = pico_layout[row][col];
+                keys[num_keys++] = pico_layout[row][col];
 
                 /* If we have enough keys, return. */
-                if (count == max_keys) return count;
+                if (num_keys == max_keys) return num_keys;
             }
         }
     }
 
-    return count;
+    return num_keys;
 }
