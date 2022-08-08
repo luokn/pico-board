@@ -13,13 +13,10 @@
 #include "usb_descriptors.h"
 
 int main() {
-    tusb_init();       /* Init USB. */
     pico_board_init(); /* Init board. */
     printf("\x1b[1;32m[USB]\x1b[0m tusb_init()\n");
 
     for (;;) {
-        /*  Process tinyusb endpoint events. */
-        tud_task();
         pico_board_task();
     }
 

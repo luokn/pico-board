@@ -9,6 +9,7 @@
 
 #include <stdint.h>
 
+#define HID_REPORT_ID_NONE 0     /* No report ID */
 #define HID_REPORT_ID_KEYBOARD 1 /* Keyboard report ID */
 #define HID_REPORT_ID_MOUSE 2    /* Mouse report ID */
 #define HID_REPORT_ID_CONSUMER 3 /* Consumer control report ID */

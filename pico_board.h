@@ -13,25 +13,17 @@
 #define PICO_BOARD_GPIO_IN_MASK 0x00FFFF
 #define PICO_BOARD_GPIO_OUT_MASK 0xFF0000
 
-struct hid_reporter {
-    uint8_t size;
-    union {
-        uint8_t               raw[CFG_TUD_HID_EP_BUFSIZE];
-        hid_keyboard_report_t keyboard;
-    } data;
-};
+struct _hid_report;
+struct _scan_result;
 
 typedef struct pico_board {
-    struct hid_reporter hid_report;
-
-    uint8_t round;
-    uint8_t num_keys;
-    uint8_t keys[6];
-
+    uint8_t  hid_report[CFG_TUD_HID_EP_BUFSIZE];
+    uint64_t hid_report_time;
+    uint8_t  hid_report_id;
     uint8_t  hid_protocol;
     uint8_t  hid_idle_rate;
-    uint64_t hid_last_report_time;
 
+    uint8_t  round;
     uint16_t input_states[PICO_BOARD_TREMBLING][PICO_BOARD_NUM_ROWS]; /* Ring buffer */
 } pico_board_t;
 
