@@ -10,8 +10,10 @@
 #include "pico_board.h"
 
 int main() {
-    pico_board_init(); /* Init board. */
+    /* Init board. */
+    pico_board_init();
 
+    /* Do board task. */
     while (1) {
         pico_board_task();
     }
