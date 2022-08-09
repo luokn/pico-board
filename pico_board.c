@@ -11,10 +11,11 @@
 #include "pico/stdio.h"
 #include "usb_descriptors.h"
 
+static size_t _pico_board_scan(uint8_t *keys, size_t max_keys);
+static void   _pico_board_press(uint8_t *keys, size_t count);
+static void   _pico_board_release();
+
 static pico_board_t _board = {0};
-static size_t       _pico_board_scan(uint8_t *keys, size_t max_keys);
-static void         _pico_board_press(uint8_t *keys, size_t num_keys);
-static void         _pico_board_release();
 
 void pico_board_init() {
     /* Setup stdio. */
@@ -22,7 +23,7 @@ void pico_board_init() {
 
     /* Setup usb. */
     tusb_init();
-    printf("\x1b[1;32m[USB_ON]\x1b[0m tusb_init()\n");
+    printf("\x1b[1;32m[USB]\x1b[0m tusb_init()\n");
 
     /* Setup input gpios. */
     for (size_t i = 0; i < PICO_BOARD_COL_PINS; i++) {
@@ -108,21 +109,25 @@ static size_t _pico_board_scan(uint8_t *keys, size_t max_keys) {
 static void _pico_board_press(uint8_t *keys, size_t count) {
     if (!tud_hid_ready()) return;
 
+    /* Generate keyboard report. */
     hid_keyboard_report_t report = {0};
     memcpy(report.keycode, keys, count);
 
-    if (memcmp(&report, &_board.hid_report, sizeof(report)) != 0) {
+    /* Compare with previous report. */
+    if (memcmp(&report, _board.hid_report, sizeof(hid_keyboard_report_t)) != 0) {
         printf("\x1b[1;32m[KEY]\x1b[0m _pico_board_scan(): [ ");
         for (size_t i = 0; i < count; i++) {
             printf("%02X ", keys[i]);
         }
         printf("]\n");
 
-        _board.hid_report_id = HID_REPORT_ID_KEYBOARD;
-        // _instance.hid_report_time = start_us;
-        memcpy(&_board.hid_report, &report, sizeof(report));
+        /* Save current report. */
+        _board.hid_report_id   = HID_REPORT_ID_KEYBOARD;
+        _board.hid_report_size = sizeof(hid_keyboard_report_t);
+        memcpy(_board.hid_report, &report, sizeof(hid_keyboard_report_t));
 
-        tud_hid_report(HID_REPORT_ID_KEYBOARD, _board.hid_report, sizeof(report));
+        /* Send the report. */
+        tud_hid_report(HID_REPORT_ID_KEYBOARD, _board.hid_report, _board.hid_report_size);
     }
 }
 
@@ -133,19 +138,23 @@ static void _pico_board_release() {
         case HID_REPORT_ID_KEYBOARD: {
             printf("\x1b[1;32m[KEY]\x1b[0m _pico_board_scan(): []\n");
 
-            _board.hid_report_id = HID_REPORT_ID_NONE;
-            // _instance.hid_report_time = start_us;
-            memset(&_board.hid_report, 0, sizeof(hid_keyboard_report_t));
+            /* Clear current report. */
+            _board.hid_report_id   = HID_REPORT_ID_NONE;
+            _board.hid_report_size = sizeof(hid_keyboard_report_t);
+            memset(_board.hid_report, 0, sizeof(hid_keyboard_report_t));
 
-            tud_hid_report(HID_REPORT_ID_KEYBOARD, _board.hid_report, sizeof(hid_keyboard_report_t));
+            /* Send the report. */
+            tud_hid_report(HID_REPORT_ID_KEYBOARD, _board.hid_report, _board.hid_report_size);
             break;
         }
         case HID_REPORT_ID_CONSUMER: {
-            _board.hid_report_id = HID_REPORT_ID_NONE;
-            // _instance.hid_report_time = start_us;
-            memset(&_board.hid_report, 0, sizeof(uint16_t));
+            /* Clear current report. */
+            _board.hid_report_id   = HID_REPORT_ID_NONE;
+            _board.hid_report_size = sizeof(uint16_t);
+            memset(_board.hid_report, 0, sizeof(uint16_t));
 
-            tud_hid_report(HID_REPORT_ID_CONSUMER, _board.hid_report, sizeof(uint16_t));
+            /* Send the report. */
+            tud_hid_report(HID_REPORT_ID_CONSUMER, _board.hid_report, _board.hid_report_size);
             break;
         }
         default: break;

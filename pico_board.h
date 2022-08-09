@@ -28,6 +28,7 @@ typedef struct {
     uint8_t  hid_report[CFG_TUD_HID_EP_BUFSIZE];
     uint64_t hid_report_time;
     uint8_t  hid_report_id;
+    uint8_t  hid_report_size;
     uint8_t  hid_protocol;
     uint8_t  hid_idle_rate;
 
