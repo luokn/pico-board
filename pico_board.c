@@ -11,15 +11,19 @@
 #include "pico/stdio.h"
 #include "usb_descriptors.h"
 
-// #define USB_ON 1
-
 static pico_board_t _board = {0};
-
-static size_t _pico_board_scan(uint8_t *keys, size_t max_keys);
-static void   _pico_board_press(uint8_t *keys, size_t num_keys);
-static void   _pico_board_release();
+static size_t       _pico_board_scan(uint8_t *keys, size_t max_keys);
+static void         _pico_board_press(uint8_t *keys, size_t num_keys);
+static void         _pico_board_release();
 
 void pico_board_init() {
+    /* Setup stdio. */
+    stdio_init_all();
+
+    /* Setup usb. */
+    tusb_init();
+    printf("\x1b[1;32m[USB_ON]\x1b[0m tusb_init()\n");
+
     /* Setup input gpios. */
     for (size_t i = 0; i < PICO_BOARD_COL_PINS; i++) {
         gpio_init(PICO_BOARD_COL_BASE + i);
@@ -33,25 +37,14 @@ void pico_board_init() {
         gpio_set_dir(PICO_BOARD_ROW_BASE + i, GPIO_OUT);
         gpio_put(PICO_BOARD_ROW_BASE + i, 0);
     }
-
-    /* Setup stdio. */
-    stdio_init_all();
-
-#ifdef USB_ON
-    /* Setup usb. */
-    tusb_init();
-    printf("\x1b[1;32m[USB_ON]\x1b[0m tusb_init()\n");
-#endif
 }
 
 void pico_board_task() {
     uint32_t start_us = timer_hw->timerawl;
     /* ==================================== */
 
-#ifdef USB_ON
     /* Process usb events. */
     tud_task();
-#endif
 
     /* Scan the keyboard. */
     uint8_t keys[6];
@@ -113,52 +106,47 @@ static size_t _pico_board_scan(uint8_t *keys, size_t max_keys) {
 }
 
 static void _pico_board_press(uint8_t *keys, size_t count) {
+    if (!tud_hid_ready()) return;
+
     hid_keyboard_report_t report = {0};
     memcpy(report.keycode, keys, count);
 
     if (memcmp(&report, &_board.hid_report, sizeof(report)) != 0) {
-        _board.hid_report_id = HID_REPORT_ID_KEYBOARD;
-        // _instance.hid_report_time = start_us;
-        memcpy(&_board.hid_report, &report, sizeof(report));
-
         printf("\x1b[1;32m[KEY]\x1b[0m _pico_board_scan(): [ ");
         for (size_t i = 0; i < count; i++) {
             printf("%02X ", keys[i]);
         }
         printf("]\n");
-#ifdef USB_ON
-        if (tud_hid_ready()) {
-            tud_hid_report(pico_board.hid_report_id, &pico_board.hid_report, sizeof(report));
-        }
-#endif
+
+        _board.hid_report_id = HID_REPORT_ID_KEYBOARD;
+        // _instance.hid_report_time = start_us;
+        memcpy(&_board.hid_report, &report, sizeof(report));
+
+        tud_hid_report(HID_REPORT_ID_KEYBOARD, _board.hid_report, sizeof(report));
     }
 }
 
 static void _pico_board_release() {
+    if (!tud_hid_ready()) return;
+
     switch (_board.hid_report_id) {
         case HID_REPORT_ID_KEYBOARD: {
+            printf("\x1b[1;32m[KEY]\x1b[0m _pico_board_scan(): []\n");
+
             _board.hid_report_id = HID_REPORT_ID_NONE;
             // _instance.hid_report_time = start_us;
             memset(&_board.hid_report, 0, sizeof(hid_keyboard_report_t));
 
-            printf("\x1b[1;32m[KEY]\x1b[0m _pico_board_scan(): []\n");
-
-#ifdef USB_ON
-            if (tud_hid_ready()) {
-                tud_hid_report(pico_board.hid_report_id, &pico_board.hid_report, sizeof(hid_keyboard_report_t));
-            }
-
-#endif
+            tud_hid_report(HID_REPORT_ID_KEYBOARD, _board.hid_report, sizeof(hid_keyboard_report_t));
+            break;
         }
         case HID_REPORT_ID_CONSUMER: {
             _board.hid_report_id = HID_REPORT_ID_NONE;
             // _instance.hid_report_time = start_us;
             memset(&_board.hid_report, 0, sizeof(uint16_t));
-#ifdef USB_ON
-            if (tud_hid_ready()) {
-                tud_hid_report(pico_board.hid_report_id, &pico_board.hid_report, sizeof(uint16_t));
-            }
-#endif
+
+            tud_hid_report(HID_REPORT_ID_CONSUMER, _board.hid_report, sizeof(uint16_t));
+            break;
         }
         default: break;
     }
