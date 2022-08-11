@@ -81,33 +81,32 @@ static size_t _pico_board_scan(uint8_t *keys, size_t max_keys) {
         /* Delay 10 us, wait for the row to stabilize and prevent parasitic capacitance. */
         busy_wait_us_32(10);
 
-        /* Readout gpio inputs. */
-        uint32_t gpio_in = gpio_get_all() & PICO_BOARD_COL_MASK;
+        /* Readout gpio input states. */
+        const uint16_t in_state = (gpio_get_all() & PICO_BOARD_COL_MASK) >> PICO_BOARD_COL_BASE;
 
-        uint16_t input = gpio_in >> PICO_BOARD_COL_BASE;
-        uint16_t curr  = _board.curr_input[row];
-        uint16_t prev  = _board.prev_inputs[_board.round][row];
+        const uint16_t curr_state = _board.curr_states[row];               /* Get current state */
+        const uint16_t prev_state = _board.prev_states[row][_board.round]; /* Get previous state */
 
-        uint16_t changed   = prev ^ input;
-        uint16_t unchanged = ~changed;
+        const uint16_t changed_bits   = prev_state ^ in_state; /* Bits that changed. */
+        const uint16_t unchanged_bits = ~changed_bits;         /* Bits that didn't change. */
 
-        uint16_t curr_changed   = curr & changed;
-        uint16_t prev_unchanged = prev & unchanged;
+        const uint16_t changed_value   = curr_state & changed_bits;   /* Get changed value from current. */
+        const uint16_t unchanged_value = prev_state & unchanged_bits; /* Get unchanged value from previous. */
 
-        curr = curr_changed | prev_unchanged;
+        const uint16_t new_state = changed_value | unchanged_value;
+        if (new_state) { /* Scan the columns if curr is not zero. */
+            for (size_t col = 0; col < PICO_BOARD_COL_PINS; col++) {
+                if (new_state & (1U << col)) {
+                    keys[count++] = pico_layout[row][col];
 
-        /* Scan the columns. */
-        for (size_t col = 0; curr && col < PICO_BOARD_COL_PINS; col++) {
-            if (curr & (1U << col)) {
-                keys[count++] = pico_layout[row][col];
-
-                /* If we have enough keys, return. */
-                if (count == max_keys) return count;
+                    /* If we have enough keys, return. */
+                    if (count == max_keys) return count;
+                }
             }
         }
 
-        _board.curr_input[row]                = curr;
-        _board.prev_inputs[_board.round][row] = input;
+        _board.curr_states[row]               = new_state;
+        _board.prev_states[row][_board.round] = in_state;
     }
 
     return count;
