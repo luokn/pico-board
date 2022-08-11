@@ -97,7 +97,7 @@ static size_t _pico_board_scan(uint8_t *keys, size_t max_keys) {
         if (new_state) { /* Scan the columns if curr is not zero. */
             for (size_t col = 0; col < PICO_BOARD_COL_PINS; col++) {
                 if (new_state & (1U << col)) {
-                    keys[count++] = pico_layout[row][col];
+                    keys[count++] = pico_layout[(row << 4) | col];
                     if (count == max_keys) return count; /* If we have enough keys, return. */
                 }
             }
