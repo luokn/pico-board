@@ -81,26 +81,33 @@ static size_t _pico_board_scan(uint8_t *keys, size_t max_keys) {
         /* Delay 10 us, wait for the row to stabilize and prevent parasitic capacitance. */
         busy_wait_us_32(10);
 
-        /* Readout input pins.  */
-        uint32_t input = gpio_get_all() & PICO_BOARD_COL_MASK;
-        input >>= PICO_BOARD_COL_BASE;
+        /* Readout gpio inputs. */
+        uint32_t gpio_in = gpio_get_all() & PICO_BOARD_COL_MASK;
 
-        /* Save current input state. */
-        uint32_t prev_input              = _board.inputs[_board.round][row];
-        _board.inputs[_board.round][row] = input;
+        uint16_t input = gpio_in >> PICO_BOARD_COL_BASE;
+        uint16_t curr  = _board.curr_input[row];
+        uint16_t prev  = _board.prev_inputs[_board.round][row];
 
-        /* XOR to get mask and find the unchanged bits. */
-        input &= ~(input ^ prev_input);
+        uint16_t changed   = prev ^ input;
+        uint16_t unchanged = ~changed;
+
+        uint16_t curr_changed   = curr & changed;
+        uint16_t prev_unchanged = prev & unchanged;
+
+        curr = curr_changed | prev_unchanged;
 
         /* Scan the columns. */
-        for (size_t col = 0; input && col < PICO_BOARD_COL_PINS; col++, input >>= 1) {
-            if (input & 1U) {
+        for (size_t col = 0; curr && col < PICO_BOARD_COL_PINS; col++) {
+            if (curr & (1U << col)) {
                 keys[count++] = pico_layout[row][col];
 
                 /* If we have enough keys, return. */
                 if (count == max_keys) return count;
             }
         }
+
+        _board.curr_input[row]                = curr;
+        _board.prev_inputs[_board.round][row] = input;
     }
 
     return count;

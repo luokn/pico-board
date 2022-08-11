@@ -33,7 +33,8 @@ typedef struct {
     uint8_t  hid_idle_rate;
 
     uint8_t  round;
-    uint16_t inputs[PICO_BOARD_TREMBLING][PICO_BOARD_NUM_ROWS]; /* Ring buffer */
+    uint16_t curr_input[PICO_BOARD_NUM_ROWS];
+    uint16_t prev_inputs[PICO_BOARD_TREMBLING][PICO_BOARD_NUM_ROWS]; /* Ring buffer */
 } pico_board_t;
 
 void pico_board_init();
