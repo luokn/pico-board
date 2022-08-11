@@ -69,7 +69,7 @@ static size_t _pico_board_scan(uint8_t *keys, size_t max_keys) {
 
     /* Next round. */
     _board.round++;
-    if (_board.round >= PICO_BOARD_NUM_ROWS) {
+    if (_board.round >= PICO_BOARD_TREMBLING) {
         _board.round = 0;
     }
 
