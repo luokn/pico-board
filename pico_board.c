@@ -65,7 +65,7 @@ void pico_board_task() {
 }
 
 static size_t _pico_board_scan(uint8_t *keys, size_t max_keys) {
-    size_t count = 0;
+    size_t pressed_keys = 0;
 
     /* Next round. */
     _board.round++;
@@ -84,21 +84,22 @@ static size_t _pico_board_scan(uint8_t *keys, size_t max_keys) {
         /* Readout gpio input states. */
         const uint16_t in_state = (gpio_get_all() & PICO_BOARD_COL_MASK) >> PICO_BOARD_COL_BASE;
 
-        const uint16_t curr_state = _board.curr_states[row];               /* Get current state */
-        const uint16_t prev_state = _board.prev_states[row][_board.round]; /* Get previous state */
+        /* Get current state and previous state from the instance. */
+        const uint16_t curr_state = _board.curr_states[row];
+        const uint16_t prev_state = _board.prev_states[row][_board.round];
 
-        const uint16_t changed_bits   = prev_state ^ in_state; /* Bits that changed. */
-        const uint16_t unchanged_bits = ~changed_bits;         /* Bits that didn't change. */
+        /* XOR to get the bits that changed and the bits that remained the same. */
+        const uint16_t changed_bits   = prev_state ^ in_state;
+        const uint16_t unchanged_bits = ~changed_bits;
 
-        const uint16_t changed_value   = curr_state & changed_bits;   /* Get changed value from current. */
-        const uint16_t unchanged_value = prev_state & unchanged_bits; /* Get unchanged value from previous. */
+        /* Get value of changed bits from current state and get value of unchanged bits from previous state. */
+        const uint16_t new_state = (curr_state & changed_bits) | (prev_state & unchanged_bits);
 
-        const uint16_t new_state = changed_value | unchanged_value;
-        if (new_state) { /* Scan the columns if curr is not zero. */
+        if (new_state) { /* Scan the columns if new_state is not zero. */
             for (size_t col = 0; col < PICO_BOARD_COL_PINS; col++) {
                 if (new_state & (1U << col)) {
-                    keys[count++] = pico_layout[(row << 4) | col];
-                    if (count == max_keys) return count; /* If we have enough keys, return. */
+                    keys[pressed_keys++] = pico_layout[(row << 4) | col];
+                    if (pressed_keys == max_keys) return pressed_keys; /* If we have enough keys, return. */
                 }
             }
         }
@@ -107,7 +108,7 @@ static size_t _pico_board_scan(uint8_t *keys, size_t max_keys) {
         _board.prev_states[row][_board.round] = in_state;
     }
 
-    return count;
+    return pressed_keys;
 }
 
 static void _pico_board_press(uint8_t *keys, size_t count) {
